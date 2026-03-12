@@ -544,6 +544,7 @@
           var textBox = document.querySelector('.css-pnjboc');
           if (textBox) textBox.style.setProperty('background-image', 'url("' + dataUrl + '")', 'important');
           setSlotState('text-img-upload-btn', file.name, null, null);
+          setTextVisibility(false);
         });
       };
       document.body.appendChild(textImgUpload);
@@ -559,6 +560,16 @@
     
     // 切换左右顺序功能（新版：带 UI 状态同步）
     var layoutMode = 'img-left'; // 'img-left' | 'text-left'
+
+    function setTextVisibility(visible) {
+      var textBox = document.querySelector('.css-pnjboc');
+      if (!textBox) return;
+      textBox.querySelectorAll('.css-8qasxi').forEach(function(el) {
+        el.style.visibility = visible ? '' : 'hidden';
+      });
+      document.getElementById('text-vis-on').classList.toggle('active', visible);
+      document.getElementById('text-vis-off').classList.toggle('active', !visible);
+    }
 
     function setLayout(mode) {
       layoutMode = mode;
@@ -1113,6 +1124,13 @@
             <div class="cp-seg" role="group">
               <button class="cp-seg-opt active" data-layout="img-left" onclick="setLayout('img-left')">图左文右</button>
               <button class="cp-seg-opt" data-layout="text-left" onclick="setLayout('text-left')">文左图右</button>
+            </div>
+          </div>
+          <div class="cp-layout">
+            <div class="cp-layout-label">文字</div>
+            <div class="cp-seg" role="group">
+              <button class="cp-seg-opt active" id="text-vis-on"  onclick="setTextVisibility(true)">显示</button>
+              <button class="cp-seg-opt"        id="text-vis-off" onclick="setTextVisibility(false)">隐藏</button>
             </div>
           </div>
           <button class="cp-export" id="export-btn">
