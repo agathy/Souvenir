@@ -23,8 +23,8 @@ except ImportError:
     sys.exit(1)
 
 # ── 路径配置 ─────────────────────────────────────────────
-EXPORT_DIR  = Path(__file__).parent.parent / "export"   # 分块 PNG 所在目录
-OUTPUT_DIR  = Path(__file__).parent.parent / "export"   # 拼合结果保存目录
+EXPORT_DIR  = Path(__file__).parent / "export"   # 分块 PNG 所在目录
+OUTPUT_DIR  = Path(__file__).parent / "export"   # 拼合结果保存目录
 # ─────────────────────────────────────────────────────────
 
 # 匹配：任意前缀_WxH.png  或  任意前缀_WxH_r行_c列.png
