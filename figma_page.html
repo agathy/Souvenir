@@ -304,6 +304,7 @@
     var currentPageH = 2468; // 动态维护：随图片高度更新
     var origTextW = 0, origTextH = 0; // 文字区原始尺寸（页面加载时从 DOM 读取）
     var exportDirHandle = null; // File System Access API 目录句柄（跨次导出复用）
+    var _hiddenTextBoxW = 0;   // 文字区隐藏时记录其宽度，用于还原
 
     function fitCanvas() {
       var W = Math.max(6398, 131 + currentCardW + 807); // 左边距131 + 卡片 + 右边距807
@@ -573,8 +574,22 @@
 
     function setTextBoxVisibility(visible) {
       var textBox = document.querySelector('.css-pnjboc');
+      var card    = document.querySelector('.css-n5lb7x');
       if (!textBox) return;
-      textBox.style.visibility = visible ? '' : 'hidden';
+      if (visible) {
+        textBox.style.display = '';
+        if (_hiddenTextBoxW > 0) {
+          currentCardW += _hiddenTextBoxW;
+          _hiddenTextBoxW = 0;
+          if (card) card.style.setProperty('width', currentCardW + 'px', 'important');
+        }
+      } else {
+        _hiddenTextBoxW = textBox.offsetWidth;
+        textBox.style.display = 'none';
+        currentCardW -= _hiddenTextBoxW;
+        if (card) card.style.setProperty('width', currentCardW + 'px', 'important');
+      }
+      fitCanvas();
       document.getElementById('textbox-vis-on').classList.toggle('active', visible);
       document.getElementById('textbox-vis-off').classList.toggle('active', !visible);
     }
