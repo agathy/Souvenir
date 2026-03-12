@@ -338,6 +338,32 @@
     window.addEventListener('load',   fitCanvas);
     window.addEventListener('resize', fitCanvas);
     
+    // 修正 EXIF 旋转：用 createImageBitmap(imageOrientation:'from-image') 画到 canvas，返回 Promise<dataURL>
+    function fixImageOrientation(file) {
+      return new Promise(function(resolve) {
+        if (typeof createImageBitmap === 'undefined') {
+          var fr = new FileReader();
+          fr.onload = function(e) { resolve(e.target.result); };
+          fr.readAsDataURL(file);
+          return;
+        }
+        createImageBitmap(file, { imageOrientation: 'from-image' })
+          .then(function(bitmap) {
+            var canvas = document.createElement('canvas');
+            canvas.width  = bitmap.width;
+            canvas.height = bitmap.height;
+            canvas.getContext('2d').drawImage(bitmap, 0, 0);
+            bitmap.close();
+            resolve(canvas.toDataURL('image/png'));
+          })
+          .catch(function() {
+            var fr = new FileReader();
+            fr.onload = function(e) { resolve(e.target.result); };
+            fr.readAsDataURL(file);
+          });
+      });
+    }
+
     // 图片上传函数
     function handleImageUpload(input, imgSelector, isBackground = false) {
       if (input.files && input.files[0]) {
@@ -382,8 +408,7 @@
       bgUpload.onchange = function() {
         if (!this.files || !this.files[0]) return;
         var file = this.files[0];
-        var reader = new FileReader();
-        reader.onload = function(e) {
+        fixImageOrientation(file).then(function(dataUrl) {
           var card = document.querySelector('.css-4xwmor');
           if (card) {
             // 移除旧的背景图层
@@ -392,7 +417,7 @@
             // 用真实 <img> 代替 CSS background-image（html2canvas 对后者捕获不稳定）
             var bgImg = document.createElement('img');
             bgImg.id  = 'bg-image-overlay';
-            bgImg.src = e.target.result;
+            bgImg.src = dataUrl;
             bgImg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;pointer-events:none;';
             card.insertBefore(bgImg, card.firstChild);
           }
@@ -400,9 +425,8 @@
           tmp.onload = function() {
             setSlotState('bg-upload-btn', file.name, tmp.naturalWidth, tmp.naturalHeight);
           };
-          tmp.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+          tmp.src = dataUrl;
+        });
       };
       document.body.appendChild(bgUpload);
       
@@ -423,13 +447,13 @@
       leftImgUpload.onchange = function() {
         if (!this.files || !this.files[0]) return;
         var filename = this.files[0].name;
-        var reader = new FileReader();
-        reader.onload = function(e) {
+        var file = this.files[0];
+        fixImageOrientation(file).then(function(dataUrl) {
           // 更新图片 src
           var img = document.querySelector('.css-d8p6k3 img');
           if (img) {
-            img.src = e.target.result;
-            if (img.srcset) img.srcset = e.target.result + ' 4096w';
+            img.src = dataUrl;
+            if (img.srcset) img.srcset = dataUrl + ' 4096w';
           }
           // 使用图片原始像素尺寸
           var tempImg = new Image();
@@ -494,9 +518,8 @@
             fitCanvas();
             setSlotState('left-img-upload-btn', filename, newImgW, newImgH);
           };   // tempImg.onload
-          tempImg.src = e.target.result;
-        };   // reader.onload
-        reader.readAsDataURL(this.files[0]);
+          tempImg.src = dataUrl;
+        });   // fixImageOrientation
       };   // leftImgUpload.onchange
       document.body.appendChild(leftImgUpload);
 
@@ -517,13 +540,11 @@
       textImgUpload.onchange = function() {
         if (!this.files || !this.files[0]) return;
         var file = this.files[0];
-        var reader = new FileReader();
-        reader.onload = function(e) {
+        fixImageOrientation(file).then(function(dataUrl) {
           var textBox = document.querySelector('.css-pnjboc');
-          if (textBox) textBox.style.setProperty('background-image', 'url("' + e.target.result + '")', 'important');
+          if (textBox) textBox.style.setProperty('background-image', 'url("' + dataUrl + '")', 'important');
           setSlotState('text-img-upload-btn', file.name, null, null);
-        };
-        reader.readAsDataURL(file);
+        });
       };
       document.body.appendChild(textImgUpload);
 
