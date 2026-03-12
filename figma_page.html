@@ -944,9 +944,8 @@
           var total  = tilesX * tilesY;
 
           if (needsTile && !confirm(
-            '导出区域 ' + EW + ' × ' + EH + ' px 超出浏览器限制，\n' +
-            '将分 ' + total + ' 块（' + tilesX + '列 × ' + tilesY + '行）导出。\n' +
-            '请用 Photoshop / GIMP 按 _r行_c列 坐标拼合。\n\n确认？'
+            '导出区域 ' + EW + ' × ' + EH + ' px 较大，\n' +
+            '将分 ' + total + ' 块（' + tilesX + '列 × ' + tilesY + '行）导出，完成后自动拼合。\n\n确认？'
           )) { restore(); return; }
 
           // 先选好目录，再开始渲染
