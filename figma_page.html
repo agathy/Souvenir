@@ -571,6 +571,14 @@
       document.getElementById('text-vis-off').classList.toggle('active', !visible);
     }
 
+    function setTextBoxVisibility(visible) {
+      var textBox = document.querySelector('.css-pnjboc');
+      if (!textBox) return;
+      textBox.style.visibility = visible ? '' : 'hidden';
+      document.getElementById('textbox-vis-on').classList.toggle('active', visible);
+      document.getElementById('textbox-vis-off').classList.toggle('active', !visible);
+    }
+
     function setLayout(mode) {
       layoutMode = mode;
       var card = document.querySelector('.css-n5lb7x');
@@ -1131,6 +1139,13 @@
             <div class="cp-seg" role="group">
               <button class="cp-seg-opt active" id="text-vis-on"  onclick="setTextVisibility(true)">显示</button>
               <button class="cp-seg-opt"        id="text-vis-off" onclick="setTextVisibility(false)">隐藏</button>
+            </div>
+          </div>
+          <div class="cp-layout">
+            <div class="cp-layout-label">文字区</div>
+            <div class="cp-seg" role="group">
+              <button class="cp-seg-opt active" id="textbox-vis-on"  onclick="setTextBoxVisibility(true)">显示</button>
+              <button class="cp-seg-opt"        id="textbox-vis-off" onclick="setTextBoxVisibility(false)">隐藏</button>
             </div>
           </div>
           <button class="cp-export" id="export-btn">
