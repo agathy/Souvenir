@@ -938,42 +938,27 @@
       if (card) card.style.setProperty('width', currentCardW + 'px', 'important');
 
       fitCanvas();
-      adjustSubTitleLetterSpacing(); // 副标题宽度跟随主标题
     }
 
-    // 调整副标题字间距：宽度与主标题对齐，字符均匀分布
+    // 调整副标题字间距，根据字数自适应
     function adjustSubTitleLetterSpacing() {
-      var subEl   = document.querySelector('.css-iy6uvo.textContents');
-      var titleEl = document.querySelector('.css-semmby.textContents');
-      if (!subEl || !titleEl) return;
-
-      // 测量主标题自然宽度（与 updateTextBoxWidth 一致）
-      var savedTW = titleEl.style.width, savedTMW = titleEl.style.minWidth;
-      titleEl.style.width    = 'max-content';
-      titleEl.style.minWidth = '0';
-      var titleW = titleEl.offsetWidth;
-      titleEl.style.width    = savedTW;
-      titleEl.style.minWidth = savedTMW;
-
-      // 测量副标题基础文字宽度（letter-spacing=0，不受 min-width:100% 影响）
-      var savedLS  = subEl.style.letterSpacing;
-      var savedSW  = subEl.style.width, savedSMW = subEl.style.minWidth;
-      subEl.style.letterSpacing = '0px';
-      subEl.style.width         = 'max-content';
-      subEl.style.minWidth      = '0';
-      var baseW = subEl.offsetWidth;
-      subEl.style.letterSpacing = savedLS;
-      subEl.style.width         = savedSW;
-      subEl.style.minWidth      = savedSMW;
-
-      var n = subEl.textContent.trim().length;
-      if (!n || titleW <= 0) return;
-
-      // CSS letter-spacing 作用于每个字符之后（共 n 个），故：
-      // targetWidth = baseW + n × spacing  →  spacing = (titleW - baseW) / n
-      var spacing = (titleW - baseW) / n;
-      if (spacing < 0) spacing = 0; // 副标题比主标题宽时不压缩
-      subEl.style.letterSpacing = spacing + 'px';
+      var subTitleElement = document.querySelector('.css-iy6uvo.textContents');
+      if (subTitleElement) {
+        var text = subTitleElement.textContent;
+        var length = text.length;
+        var containerWidth = subTitleElement.parentElement.offsetWidth;
+        
+        // 计算合适的字间距
+        var baseSpacing = 0;
+        var maxSpacing = 100;
+        
+        // 根据字数和容器宽度动态调整字间距
+        var calculatedSpacing = Math.min(maxSpacing, (containerWidth - subTitleElement.offsetWidth) / (length - 1));
+        
+        // 应用字间距
+        subTitleElement.style.letterSpacing = calculatedSpacing + 'px';
+        subTitleElement.style.webkitTextSpacing = calculatedSpacing + 'px';
+      }
     }
     
     // 导出图片功能
