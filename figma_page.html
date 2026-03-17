@@ -639,6 +639,9 @@
       // 文左图右时英文装饰左对齐，否则右对齐
       var engEl = document.querySelector('.css-twmm4f.textContents');
       if (engEl) engEl.style.textAlign = mode === 'text-left' ? 'left' : 'right';
+      // 副标题：文左图右时左对齐，否则右对齐
+      var subEl = document.querySelector('.css-iy6uvo.textContents');
+      if (subEl) subEl.style.textAlign = mode === 'text-left' ? 'left' : 'right';
       // 同步分段控件高亮
       document.querySelectorAll('.cp-seg-opt').forEach(function(opt) {
         opt.classList.toggle('active', opt.getAttribute('data-layout') === mode);
