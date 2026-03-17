@@ -909,9 +909,19 @@
       // 更新 scale-wrapper 的基准宽度（若存在）
       if (wrapper) wrapper.style.width = unscaledRequiredW + 'px';
 
-      // 横线宽度与内容区同宽（内容区 = 文字区宽 - 左90 - 右88.28）
-      var lineW = Math.round(unscaledRequiredW - 90 - 88.28);
-      document.querySelectorAll('.css-quy6y2').forEach(function(div) {
+      // 横线宽度始终等于主标题文字自然宽度
+      var lineEl = document.querySelector('.css-semmby.textContents');
+      var lineW = 0;
+      if (lineEl) {
+        var lSavedW = lineEl.style.width, lSavedMW = lineEl.style.minWidth;
+        lineEl.style.width    = 'max-content';
+        lineEl.style.minWidth = '0';
+        lineW = lineEl.offsetWidth;
+        lineEl.style.width    = lSavedW;
+        lineEl.style.minWidth = lSavedMW;
+      }
+      if (lineW <= 0) lineW = Math.round(unscaledRequiredW - 90 - 88.28);
+      document.querySelectorAll('.css-pnjboc .css-quy6y2').forEach(function(div) {
         div.style.setProperty('width', lineW + 'px', 'important');
         var img = div.querySelector('img');
         if (img && img.src.indexOf('data:image/svg+xml') === 0) {
