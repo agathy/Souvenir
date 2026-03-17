@@ -298,6 +298,28 @@
       background-position: center !important;
       background-repeat: no-repeat !important;
     }
+
+    /* 介绍圆形标签：文字居中 */
+    #container .css-1faei1.textContents {
+      margin-left: 0 !important;
+      margin-top: 1.95px !important;
+      width: 69px !important;
+      height: 69px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      letter-spacing: 0 !important;
+    }
+    #container .css-wm8rv3.textContents {
+      margin-left: 80px !important;
+      margin-top: 1.95px !important;
+      width: 69px !important;
+      height: 69px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      letter-spacing: 0 !important;
+    }
   </style>
   <script>
     var currentCardW = 5460; // 动态维护：随图片宽度更新
@@ -776,13 +798,15 @@
           element.style.color = textColorInput.value;
           element.style.webkitTextFillColor = textColorInput.value;
         });
-        
+        updateCircleColors(textColorInput.value);
+
         textColorInput.addEventListener('change', function() {
           var textElements = document.querySelectorAll('.textContents, .css-semmby, .css-iy6uvo, .css-twmm4f, .css-mcq4vx, .css-q42so7');
           textElements.forEach(function(element) {
             element.style.color = this.value;
             element.style.webkitTextFillColor = this.value;
           }.bind(this));
+          updateCircleColors(this.value);
         });
       }
       
@@ -844,6 +868,15 @@
       }
     }
     
+    // 更新介绍圆圈颜色（与文字颜色相同，透明度 50%）
+    function updateCircleColors(hexColor) {
+      var fill = hexColor.replace('#', '%23');
+      var svg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='69' height='69' viewBox='0 0 69 69'%3E%3Ccircle cx='34.5' cy='34.5' r='27' fill='" + fill + "' fill-opacity='0.5'/%3E%3C/svg%3E";
+      document.querySelectorAll('.css-lj8avb img, .css-e7s3mn img').forEach(function(img) {
+        img.src = svg;
+      });
+    }
+
     // 读取文字区 scale-wrapper 当前缩放比
     function getTextBoxRatio() {
       var textBox = document.querySelector('.css-pnjboc');
