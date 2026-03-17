@@ -305,6 +305,8 @@
     var origTextW = 0, origTextH = 0; // 文字区原始尺寸（页面加载时从 DOM 读取）
     var exportDirHandle = null; // File System Access API 目录句柄（跨次导出复用）
     var _hiddenTextBoxW = 0;   // 文字区隐藏时记录其宽度，用于还原
+    var textBgImageNaturalW = 0, textBgImageNaturalH = 0; // 文字区背景图原始尺寸
+    var currentImgW = 4541; // 动态维护：左侧图片当前宽度
 
     function fitCanvas() {
       var W = Math.max(6398, 131 + currentCardW + 807); // 左边距131 + 卡片 + 右边距807
@@ -462,7 +464,6 @@
             var newImgW = tempImg.naturalWidth;
             var newImgH = tempImg.naturalHeight;
             var ratio    = newImgH / origTextH;
-            var newTextW = Math.round(origTextW * ratio);
             var PAD = 200; // 左右各100px padding
 
             var imgBox   = document.querySelector('.css-d8p6k3');
@@ -498,18 +499,19 @@
               }
               wrapper.style.transform = 'scale(' + ratio + ')';
               wrapper.style.transformOrigin = 'top left';
-              textBox.style.setProperty('width',    newTextW + 'px',          'important');
-              textBox.style.setProperty('height',   newImgH  + 'px',          'important');
-              textBox.style.setProperty('flex', '0 0 ' + newTextW + 'px',     'important');
-              textBox.style.setProperty('overflow', 'hidden',                  'important');
+              // 高度由图片决定，宽度交由 updateTextBoxWidth() 自动计算
+              textBox.style.setProperty('height',   newImgH  + 'px', 'important');
+              textBox.style.setProperty('overflow', 'hidden',         'important');
             }
             if (card) {
-              currentCardW = newImgW + newTextW + PAD;
-              card.style.setProperty('width',  currentCardW + 'px',    'important');
               card.style.setProperty('height', (newImgH + PAD) + 'px', 'important');
             }
             // 页面高度 = 上边距(630) + 卡片内容高 + padding(200) + 下边距(105)
             currentPageH = 630 + newImgH + PAD + 105;
+            // 更新左图宽度，再让 updateTextBoxWidth 重算文字区宽和卡片宽
+            currentImgW = newImgW;
+            updateTextBoxWidth();
+            // 更新内容容器 CSS 变量（currentCardW 已由 updateTextBoxWidth 更新）
             var newPageW = Math.max(6398, 131 + currentCardW + 807);
             var contentDiv = document.querySelector('.css-j6ldtg');
             if (contentDiv) {
@@ -546,6 +548,14 @@
           if (textBox) textBox.style.setProperty('background-image', 'url("' + dataUrl + '")', 'important');
           setSlotState('text-img-upload-btn', file.name, null, null);
           setTextVisibility(false);
+          // 保存背景图原始尺寸，触发文字区宽度自适应
+          var tmp = new Image();
+          tmp.onload = function() {
+            textBgImageNaturalW = tmp.naturalWidth;
+            textBgImageNaturalH = tmp.naturalHeight;
+            updateTextBoxWidth();
+          };
+          tmp.src = dataUrl;
         });
       };
       document.body.appendChild(textImgUpload);
@@ -650,6 +660,10 @@
         if (textBox) textBox.style.removeProperty('background-image');
         var inp = document.getElementById('text-img-upload-input');
         if (inp) inp.value = '';
+        // 清除后恢复主标题宽度驱动
+        textBgImageNaturalW = 0;
+        textBgImageNaturalH = 0;
+        updateTextBoxWidth();
       }
     }
     
@@ -658,6 +672,8 @@
       initUploadButtons();
       initControlPanel();
       initExportFunction();
+      // 初始化文字区宽度（跟随默认主标题）
+      updateTextBoxWidth();
       
       // 初始化画布尺寸
       var container = document.querySelector('.css-d8p6k3');
@@ -774,6 +790,7 @@
           var mainTitle = document.querySelector('.css-semmby.textContents');
           if (mainTitle) {
             mainTitle.textContent = this.value;
+            updateTextBoxWidth(); // 文字区宽度跟随主标题宽度
           }
         });
       }
@@ -825,6 +842,69 @@
       }
     }
     
+    // 读取文字区 scale-wrapper 当前缩放比
+    function getTextBoxRatio() {
+      var textBox = document.querySelector('.css-pnjboc');
+      if (!textBox) return 1;
+      var wrapper = textBox.querySelector(':scope > .text-scale-wrapper');
+      if (!wrapper) return 1;
+      var m = (wrapper.style.transform || '').match(/scale\(([^)]+)\)/);
+      return m ? parseFloat(m[1]) : 1;
+    }
+
+    // 文字区宽度自适应：跟随主标题文字宽度或文字区背景图宽度
+    function updateTextBoxWidth() {
+      var textBox = document.querySelector('.css-pnjboc');
+      var card    = document.querySelector('.css-n5lb7x');
+      if (!textBox || textBox.style.display === 'none') return;
+
+      var ratio   = getTextBoxRatio();
+      var wrapper = textBox.querySelector(':scope > .text-scale-wrapper');
+
+      var requiredRenderedW, unscaledRequiredW;
+
+      if (textBgImageNaturalW > 0 && textBgImageNaturalH > 0) {
+        // 文字区背景图：保持图片宽高比，以文字区当前高度为准
+        var boxH = textBox.offsetHeight || origTextH;
+        requiredRenderedW  = Math.round(textBgImageNaturalW * boxH / textBgImageNaturalH);
+        unscaledRequiredW  = ratio > 0 ? Math.round(requiredRenderedW / ratio) : requiredRenderedW;
+      } else {
+        // 主标题宽度驱动
+        var titleEl = document.querySelector('.css-semmby.textContents');
+        if (!titleEl) return;
+        // 临时解除宽度约束，测量文字自然宽度
+        var savedW    = titleEl.style.width;
+        var savedMinW = titleEl.style.minWidth;
+        titleEl.style.width    = 'max-content';
+        titleEl.style.minWidth = '0';
+        var titleNaturalW = titleEl.offsetWidth;
+        titleEl.style.width    = savedW;
+        titleEl.style.minWidth = savedMinW;
+
+        // 文字区内容区左90 + 右88.28（来自 .css-f0bll7 定位）
+        unscaledRequiredW = Math.ceil(titleNaturalW + 90 + 88.28);
+        unscaledRequiredW = Math.max(unscaledRequiredW, 300);
+        requiredRenderedW = Math.round(unscaledRequiredW * ratio);
+      }
+
+      // 更新 origTextW，使后续左图上传时 ratio 缩放基准正确
+      origTextW = unscaledRequiredW;
+
+      // 更新 scale-wrapper 的基准宽度（若存在）
+      if (wrapper) wrapper.style.width = unscaledRequiredW + 'px';
+
+      // 应用到文字区
+      textBox.style.setProperty('width', requiredRenderedW + 'px', 'important');
+      textBox.style.setProperty('flex',  '0 0 ' + requiredRenderedW + 'px', 'important');
+
+      // 更新卡片总宽
+      var PAD = 200;
+      currentCardW = currentImgW + requiredRenderedW + PAD;
+      if (card) card.style.setProperty('width', currentCardW + 'px', 'important');
+
+      fitCanvas();
+    }
+
     // 调整副标题字间距，根据字数自适应
     function adjustSubTitleLetterSpacing() {
       var subTitleElement = document.querySelector('.css-iy6uvo.textContents');
