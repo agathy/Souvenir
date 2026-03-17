@@ -837,6 +837,7 @@
         introTextInput.addEventListener('input', function() {
           var introText = document.querySelector('.css-mcq4vx.textContents');
           if (introText) {
+            introText.style.whiteSpace = 'pre-wrap';
             introText.textContent = this.value;
           }
         });
