@@ -614,6 +614,9 @@
         void card.offsetWidth; // 强制重排
         fitCanvas();
       }
+      // 文左图右时英文装饰左对齐，否则右对齐
+      var engEl = document.querySelector('.css-twmm4f.textContents');
+      if (engEl) engEl.style.textAlign = mode === 'text-left' ? 'left' : 'right';
       // 同步分段控件高亮
       document.querySelectorAll('.cp-seg-opt').forEach(function(opt) {
         opt.classList.toggle('active', opt.getAttribute('data-layout') === mode);
@@ -816,16 +819,14 @@
         englishTextInput.addEventListener('input', function() {
           var englishText = document.querySelector('.css-twmm4f.textContents');
           if (englishText) {
-            var textParts = this.value.split(' ');
-            if (textParts.length >= 2) {
-              var pElements = englishText.querySelectorAll('p');
-              if (pElements[0]) pElements[0].textContent = textParts[0];
-              if (pElements[1]) pElements[1].textContent = textParts[1];
-            } else {
-              var pElements = englishText.querySelectorAll('p');
-              if (pElements[0]) pElements[0].textContent = this.value;
-              if (pElements[1]) pElements[1].textContent = '';
-            }
+            var lines = this.value.split('\n');
+            englishText.innerHTML = '';
+            lines.forEach(function(line, i) {
+              var p = document.createElement('p');
+              p.className = i === 0 ? 'css-8jchzs css-jpsr3q' : 'css-8zr56v css-jpsr3q';
+              p.textContent = line;
+              englishText.appendChild(p);
+            });
           }
         });
       }
@@ -1275,7 +1276,8 @@
           </div>
           <div class="cp-field">
             <label>英文装饰</label>
-            <input type="text" id="english-text" value="ZHOU DUN YI CUTURE">
+            <textarea id="english-text" rows="2" style="min-height:44px;">ZHOU DUN YI
+CUTURE</textarea>
           </div>
           <div class="cp-field" style="grid-column: 1 / -1;">
             <label>介绍文本</label>
